@@ -36,7 +36,7 @@ with s as (
             --and exc.delete_date is null
             and promotion.id_client = exc.id_client
         ) 
-        and --для протека и гк деление без остатка на кратность, для всех остальных > кратности
+        and --для 36 и 37 деление без остатка на кратность, для всех остальных > кратности
         (case when fss.id_client in (36,37) then case when promotion.id_promotion_type = 0 then fss.quantity % 2=0 when promotion.id_promotion_type = 1 then fss.quantity % 3=0 when promotion.id_promotion_type = 2 then fss.quantity %4=0 end
         else 
           case when promotion.id_promotion_type = 0 then fss.quantity >= 2 when promotion.id_promotion_type = 1 then fss.quantity >= 3 when promotion.id_promotion_type = 2 then fss.quantity >=4 end end 
@@ -72,7 +72,7 @@ with s as (
             --and exc.delete_date is null
             and promotion.id_client = exc.id_client
         ) 
-        and --для протека и гк деление без остатка на кратность, для всех остальных > кратности
+        and --для 36 и 37 деление без остатка на кратность, для всех остальных > кратности
         (case when fss.id_client in (36,37) then case when promotion.id_promotion_type = 0 then fss.quantity % 2=0 when promotion.id_promotion_type = 1 then fss.quantity % 3=0 when promotion.id_promotion_type = 2 then fss.quantity %4=0 end
         else 
           case when promotion.id_promotion_type = 0 then fss.quantity >= 2 when promotion.id_promotion_type = 1 then fss.quantity >= 3 when promotion.id_promotion_type = 2 then fss.quantity >=4 end end 
