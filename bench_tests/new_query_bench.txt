@@ -1,0 +1,152 @@
+Hash Left Join  (cost=1086854.72..1087258.98 rows=5562 width=990) (actual time=17387.768..17391.862 rows=2391 loops=1)
+  Hash Cond: (twp.id_promotion_type = promotion_type.id_promotion_type)
+  CTE promo_base_info
+    ->  Hash Join  (cost=16.12..113.76 rows=1698 width=24) (actual time=0.289..1.621 rows=2456 loops=1)
+          Hash Cond: (lpcs.id_promotion = fp.id_promotion)
+          ->  Seq Scan on lnk_promo_common_sku lpcs  (cost=0.00..90.91 rows=2538 width=8) (actual time=0.046..0.813 rows=2456 loops=1)
+                Filter: (delete_date IS NULL)
+                Rows Removed by Filter: 1454
+          ->  Hash  (cost=12.68..12.68 rows=275 width=20) (actual time=0.212..0.213 rows=305 loops=1)
+                Buckets: 1024  Batches: 1  Memory Usage: 24kB
+                ->  Seq Scan on fct_promotion fp  (cost=0.00..12.68 rows=275 width=20) (actual time=0.041..0.137 rows=305 loops=1)
+                      Filter: (delete_date IS NULL)
+                      Rows Removed by Filter: 109
+  ->  Hash Right Join  (cost=1086727.82..1087047.63 rows=5562 width=314) (actual time=17387.686..17389.295 rows=2391 loops=1)
+        Hash Cond: (fct_client.id_client = twp.id_client)
+        ->  HashAggregate  (cost=298.47..354.09 rows=5562 width=44) (actual time=4.535..5.323 rows=5592 loops=1)
+              Group Key: fct_client.id_client, fct_client.client_name
+              Batches: 1  Memory Usage: 977kB
+              ->  Seq Scan on fct_client  (cost=0.00..270.65 rows=5565 width=44) (actual time=0.033..2.127 rows=5618 loops=1)
+                    Filter: (delete_date IS NULL)
+                    Rows Removed by Filter: 10
+        ->  Hash  (cost=1086426.84..1086426.84 rows=200 width=274) (actual time=17382.912..17382.938 rows=2391 loops=1)
+              Buckets: 4096 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 415kB
+              ->  Merge Left Join  (cost=1086400.76..1086426.84 rows=200 width=274) (actual time=17380.145..17382.013 rows=2391 loops=1)
+                    Merge Cond: ((twp.id_client = plus_x.id_client) AND (twp.id_common_sku = dim_sku.id_common_sku) AND (twp.start_date = plus_x.sale_date))
+                    ->  Sort  (cost=1085859.32..1085859.82 rows=200 width=268) (actual time=17373.460..17373.663 rows=2391 loops=1)
+                          Sort Key: twp.id_client, twp.id_common_sku, twp.start_date
+                          Sort Method: quicksort  Memory: 617kB
+                          ->  Merge Left Join  (cost=1085845.97..1085851.67 rows=200 width=268) (actual time=17370.615..17371.468 rows=2391 loops=1)
+                                Merge Cond: (twp.id_common_sku = common_sku.id_common_sku)
+                                ->  Sort  (cost=1085787.00..1085787.50 rows=200 width=196) (actual time=17370.078..17370.269 rows=2391 loops=1)
+                                      Sort Key: twp.id_common_sku
+                                      Sort Method: quicksort  Memory: 427kB
+                                      ->  Subquery Scan on twp  (cost=1085735.51..1085779.35 rows=200 width=196) (actual time=17363.794..17369.192 rows=2391 loops=1)
+                                            ->  GroupAggregate  (cost=1085735.51..1085777.35 rows=200 width=312) (actual time=17363.785..17368.907 rows=2391 loops=1)
+                                                  Group Key: agg_table.id_client, agg_table.start_date, agg_table.end_date, agg_table.id_common_sku, agg_table.id_promotion, agg_table.id_promotion_type
+                                                  ->  Sort  (cost=1085735.51..1085737.40 rows=759 width=128) (actual time=17363.711..17364.251 rows=8445 loops=1)
+                                                        Sort Key: agg_table.id_client, agg_table.start_date, agg_table.end_date, agg_table.id_common_sku, agg_table.id_promotion, agg_table.id_promotion_type
+                                                        Sort Method: quicksort  Memory: 1434kB
+                                                        ->  Subquery Scan on agg_table  (cost=1084959.55..1085699.19 rows=759 width=128) (actual time=15853.549..17354.437 rows=8445 loops=1)
+                                                              ->  GroupAggregate  (cost=1084959.55..1085691.60 rows=759 width=128) (actual time=15853.539..17352.186 rows=8445 loops=1)
+                                                                    Group Key: "*SELECT* 1".sales_type, "*SELECT* 1".id_promotion_type, "*SELECT* 1".id_client, "*SELECT* 1".start_date, "*SELECT* 1".end_date, "*SELECT* 1".id_common_sku, "*SELECT* 1".id_promotion
+                                                                    ->  Sort  (cost=1084959.55..1084978.51 rows=7586 width=68) (actual time=15853.430..16482.069 rows=769010 loops=1)
+                                                                          Sort Key: "*SELECT* 1".sales_type, "*SELECT* 1".id_promotion_type, "*SELECT* 1".id_client, "*SELECT* 1".start_date, "*SELECT* 1".end_date, "*SELECT* 1".id_common_sku, "*SELECT* 1".id_promotion
+                                                                          Sort Method: external merge  Disk: 48944kB
+                                                                          ->  Append  (cost=274.76..1084470.67 rows=7586 width=68) (actual time=4195.429..13691.661 rows=769010 loops=1)
+                                                                                ->  Subquery Scan on "*SELECT* 1"  (cost=274.76..543232.99 rows=3793 width=68) (actual time=4195.428..8992.025 rows=103497 loops=1)
+                                                                                      ->  Nested Loop Anti Join  (cost=274.76..543195.06 rows=3793 width=1164) (actual time=4195.420..8970.137 rows=103497 loops=1)
+                                                                                            Join Filter: ((fss.id_operation_type = 4) AND (((fss.operation_date >= pnpxe.start_date) AND (fss.operation_date <= pnpxe.end_date)) OR ((fss.operation_date >= (pbi.start_date - (pbi.end_date - pbi.start_date))) AND (fss.operation_date <= (pbi.start_date - 1)))))
+                                                                                            Rows Removed by Join Filter: 72890
+                                                                                            ->  Hash Join  (cost=274.33..541095.43 rows=3793 width=48) (actual time=4195.355..8013.086 rows=138476 loops=1)
+                                                                                                  Hash Cond: ((fss.id_sku = sku.id_sku) AND (fss.id_client = pbi.id_client))
+                                                                                                  Join Filter: ((((fss.operation_date >= pbi.start_date) AND (fss.operation_date <= pbi.end_date)) OR ((fss.operation_date >= (pbi.start_date - (pbi.end_date - pbi.start_date))) AND (fss.operation_date <= (pbi.start_date - 1)))) AND (CASE WHEN (CASE WHEN ((fss.operation_date >= pbi.start_date) AND (fss.operation_date <= pbi.end_date)) THEN 'promo'::text WHEN ((fss.operation_date >= (pbi.start_date - (pbi.end_date - pbi.start_date))) AND (fss.operation_date <= (pbi.start_date - 1))) THEN 'control'::text ELSE NULL::text END ~~ '%total%'::text) THEN fss.quantity WHEN (fss.id_client = ANY ('{36,37}'::integer[])) THEN CASE WHEN ((fss.quantity % ((pbi.id_promotion_type + 2))::numeric) = '0'::numeric) THEN fss.quantity ELSE '0'::numeric END ELSE CASE WHEN (fss.quantity >= ((pbi.id_promotion_type + 2))::numeric) THEN fss.quantity ELSE '0'::numeric END END > '0'::numeric))
+                                                                                                  Rows Removed by Join Filter: 10541675
+                                                                                                  ->  Append  (cost=0.14..494563.34 rows=3397073 width=28) (actual time=3347.911..6267.885 rows=3218857 loops=1)
+                                                                                                        ->  Index Scan using fct_sale_second_y2020_pkey on fct_sale_second_y2020 fss_1  (cost=0.14..8.69 rows=1 width=44) (actual time=0.010..0.010 rows=0 loops=1)
+                                                                                                              Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                              Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                        ->  Index Scan using fct_sale_second_y2021_pkey on fct_sale_second_y2021 fss_2  (cost=0.14..8.69 rows=1 width=44) (actual time=0.004..0.004 rows=0 loops=1)
+                                                                                                              Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                              Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                        ->  Seq Scan on fct_sale_second_y2022 fss_3  (cost=0.00..64868.82 rows=1010039 width=28) (actual time=3347.896..3751.643 rows=875582 loops=1)
+                                                                                                              Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                              Rows Removed by Filter: 594469
+                                                                                                        ->  Seq Scan on fct_sale_second_y2023 fss_4  (cost=0.00..146536.26 rows=932589 width=28) (actual time=0.059..789.792 rows=900071 loops=1)
+                                                                                                              Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                              Rows Removed by Filter: 2291519
+                                                                                                        ->  Seq Scan on fct_sale_second_y2024 fss_5  (cost=0.00..188111.42 rows=1026034 width=29) (actual time=1.535..1009.132 rows=999783 loops=1)
+                                                                                                              Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                              Rows Removed by Filter: 3159757
+                                                                                                        ->  Seq Scan on fct_sale_second_y2025 fss_6  (cost=0.00..78026.74 rows=428407 width=29) (actual time=0.074..437.094 rows=443421 loops=1)
+                                                                                                              Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                              Rows Removed by Filter: 1381451
+                                                                                                        ->  Index Scan using fct_sale_second_y2026_pkey on fct_sale_second_y2026 fss_7  (cost=0.14..8.69 rows=1 width=44) (actual time=0.019..0.019 rows=0 loops=1)
+                                                                                                              Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                              Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                        ->  Index Scan using fct_sale_second_y2027_pkey on fct_sale_second_y2027 fss_8  (cost=0.14..8.69 rows=1 width=44) (actual time=0.013..0.013 rows=0 loops=1)
+                                                                                                              Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                              Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                  ->  Hash  (cost=213.92..213.92 rows=4018 width=28) (actual time=7.358..7.360 rows=10648 loops=1)
+                                                                                                        Buckets: 16384 (originally 4096)  Batches: 1 (originally 1)  Memory Usage: 752kB
+                                                                                                        ->  Hash Join  (cost=97.33..213.92 rows=4018 width=28) (actual time=0.812..4.677 rows=10648 loops=1)
+                                                                                                              Hash Cond: (pbi.id_common_sku = sku.id_common_sku)
+                                                                                                              ->  CTE Scan on promo_base_info pbi  (cost=0.00..33.96 rows=1698 width=24) (actual time=0.293..2.620 rows=2456 loops=1)
+                                                                                                              ->  Hash  (cost=81.59..81.59 rows=1259 width=8) (actual time=0.472..0.473 rows=1272 loops=1)
+                                                                                                                    Buckets: 2048  Batches: 1  Memory Usage: 66kB
+                                                                                                                    ->  Seq Scan on dim_sku sku  (cost=0.00..81.59 rows=1259 width=8) (actual time=0.016..0.282 rows=1272 loops=1)
+                                                                                            ->  Index Only Scan using idx_promo_n_plus_x_exception_composite on promo_n_plus_x_exception pnpxe  (cost=0.43..0.51 rows=1 width=24) (actual time=0.006..0.006 rows=1 loops=138476)
+                                                                                                  Index Cond: ((id_client = fss.id_client) AND (id_sku = fss.id_sku) AND (tin_buyer = fss.tin_buyer))
+                                                                                                  Heap Fetches: 26026
+                                                                                ->  Subquery Scan on "*SELECT* 2"  (cost=274.33..541199.74 rows=3793 width=68) (actual time=843.949..4614.023 rows=665513 loops=1)
+                                                                                      ->  Hash Join  (cost=274.33..541161.81 rows=3793 width=1164) (actual time=843.942..4534.676 rows=665513 loops=1)
+                                                                                            Hash Cond: ((fss_9.id_sku = sku_1.id_sku) AND (fss_9.id_client = pbi_1.id_client))
+                                                                                            Join Filter: ((((fss_9.operation_date >= pbi_1.start_date) AND (fss_9.operation_date <= pbi_1.end_date)) OR ((fss_9.operation_date >= (pbi_1.start_date - (pbi_1.end_date - pbi_1.start_date))) AND (fss_9.operation_date <= (pbi_1.start_date - 1)))) AND (CASE WHEN (CASE WHEN ((fss_9.operation_date >= pbi_1.start_date) AND (fss_9.operation_date <= pbi_1.end_date)) THEN 'total_promo'::text WHEN ((fss_9.operation_date >= (pbi_1.start_date - (pbi_1.end_date - pbi_1.start_date))) AND (fss_9.operation_date <= (pbi_1.start_date - 1))) THEN 'total_control'::text ELSE NULL::text END ~~ '%total%'::text) THEN fss_9.quantity WHEN (fss_9.id_client = ANY ('{36,37}'::integer[])) THEN CASE WHEN ((fss_9.quantity % ((pbi_1.id_promotion_type + 2))::numeric) = '0'::numeric) THEN fss_9.quantity ELSE '0'::numeric END ELSE CASE WHEN (fss_9.quantity >= ((pbi_1.id_promotion_type + 2))::numeric) THEN fss_9.quantity ELSE '0'::numeric END END > '0'::numeric))
+                                                                                            Rows Removed by Join Filter: 10014638
+                                                                                            ->  Append  (cost=0.14..494563.34 rows=3397073 width=24) (actual time=0.086..3021.908 rows=3218857 loops=1)
+                                                                                                  ->  Index Scan using fct_sale_second_y2020_pkey on fct_sale_second_y2020 fss_10  (cost=0.14..8.69 rows=1 width=40) (actual time=0.012..0.012 rows=0 loops=1)
+                                                                                                        Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                        Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                  ->  Index Scan using fct_sale_second_y2021_pkey on fct_sale_second_y2021 fss_11  (cost=0.14..8.69 rows=1 width=40) (actual time=0.011..0.012 rows=0 loops=1)
+                                                                                                        Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                        Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                  ->  Seq Scan on fct_sale_second_y2022 fss_12  (cost=0.00..64868.82 rows=1010039 width=24) (actual time=0.060..409.950 rows=875582 loops=1)
+                                                                                                        Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                        Rows Removed by Filter: 594469
+                                                                                                  ->  Seq Scan on fct_sale_second_y2023 fss_13  (cost=0.00..146536.26 rows=932589 width=24) (actual time=0.061..813.778 rows=900071 loops=1)
+                                                                                                        Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                        Rows Removed by Filter: 2291519
+                                                                                                  ->  Seq Scan on fct_sale_second_y2024 fss_14  (cost=0.00..188111.42 rows=1026034 width=25) (actual time=1.688..1078.831 rows=999783 loops=1)
+                                                                                                        Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                        Rows Removed by Filter: 3159757
+                                                                                                  ->  Seq Scan on fct_sale_second_y2025 fss_15  (cost=0.00..78026.74 rows=428407 width=25) (actual time=0.055..441.312 rows=443421 loops=1)
+                                                                                                        Filter: ((delete_date = '2000-01-01 00:00:00'::timestamp without time zone) AND (id_client = ANY ('{16,28,35,36,37,418}'::integer[])))
+                                                                                                        Rows Removed by Filter: 1381451
+                                                                                                  ->  Index Scan using fct_sale_second_y2026_pkey on fct_sale_second_y2026 fss_16  (cost=0.14..8.69 rows=1 width=40) (actual time=0.021..0.021 rows=0 loops=1)
+                                                                                                        Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                        Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                                  ->  Index Scan using fct_sale_second_y2027_pkey on fct_sale_second_y2027 fss_17  (cost=0.14..8.69 rows=1 width=40) (actual time=0.013..0.013 rows=0 loops=1)
+                                                                                                        Index Cond: (delete_date = '2000-01-01 00:00:00'::timestamp without time zone)
+                                                                                                        Filter: (id_client = ANY ('{16,28,35,36,37,418}'::integer[]))
+                                                                                            ->  Hash  (cost=213.92..213.92 rows=4018 width=28) (actual time=4.684..4.686 rows=10648 loops=1)
+                                                                                                  Buckets: 16384 (originally 4096)  Batches: 1 (originally 1)  Memory Usage: 752kB
+                                                                                                  ->  Hash Join  (cost=97.33..213.92 rows=4018 width=28) (actual time=0.514..2.086 rows=10648 loops=1)
+                                                                                                        Hash Cond: (pbi_1.id_common_sku = sku_1.id_common_sku)
+                                                                                                        ->  CTE Scan on promo_base_info pbi_1  (cost=0.00..33.96 rows=1698 width=24) (actual time=0.002..0.257 rows=2456 loops=1)
+                                                                                                        ->  Hash  (cost=81.59..81.59 rows=1259 width=8) (actual time=0.478..0.478 rows=1272 loops=1)
+                                                                                                              Buckets: 2048  Batches: 1  Memory Usage: 66kB
+                                                                                                              ->  Seq Scan on dim_sku sku_1  (cost=0.00..81.59 rows=1259 width=8) (actual time=0.018..0.278 rows=1272 loops=1)
+                                ->  Sort  (cost=58.97..60.32 rows=541 width=76) (actual time=0.495..0.527 rows=539 loops=1)
+                                      Sort Key: common_sku.id_common_sku
+                                      Sort Method: quicksort  Memory: 104kB
+                                      ->  Seq Scan on dim_common_sku common_sku  (cost=0.00..34.41 rows=541 width=76) (actual time=0.044..0.319 rows=549 loops=1)
+                    ->  Sort  (cost=541.45..547.47 rows=2407 width=18) (actual time=6.609..6.797 rows=2539 loops=1)
+                          Sort Key: plus_x.id_client, dim_sku.id_common_sku, plus_x.sale_date
+                          Sort Method: quicksort  Memory: 295kB
+                          ->  Hash Join  (cost=97.33..406.26 rows=2407 width=18) (actual time=0.574..3.385 rows=2539 loops=1)
+                                Hash Cond: (plus_x.id_sku = dim_sku.id_sku)
+                                ->  Seq Scan on fct_promo_n_plus_x plus_x  (cost=0.00..302.59 rows=2407 width=18) (actual time=0.051..2.292 rows=2539 loops=1)
+                                      Filter: (delete_date IS NULL)
+                                      Rows Removed by Filter: 4740
+                                ->  Hash  (cost=81.59..81.59 rows=1259 width=8) (actual time=0.483..0.484 rows=1272 loops=1)
+                                      Buckets: 2048  Batches: 1  Memory Usage: 66kB
+                                      ->  Seq Scan on dim_sku  (cost=0.00..81.59 rows=1259 width=8) (actual time=0.019..0.287 rows=1272 loops=1)
+  ->  Hash  (cost=11.40..11.40 rows=140 width=520) (actual time=0.039..0.039 rows=5 loops=1)
+        Buckets: 1024  Batches: 1  Memory Usage: 9kB
+        ->  Seq Scan on dict_promotion_type promotion_type  (cost=0.00..11.40 rows=140 width=520) (actual time=0.026..0.028 rows=5 loops=1)
+Planning Time: 6.311 ms
+JIT:
+  Functions: 215
+  Options: Inlining true, Optimization true, Expressions true, Deforming true
+  Timing: Generation 22.389 ms, Inlining 28.332 ms, Optimization 2042.656 ms, Emission 1277.703 ms, Total 3371.080 ms
+Execution Time: 17426.203 ms
