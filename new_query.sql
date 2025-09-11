@@ -200,3 +200,4 @@ left join (select distinct id_client, client_name from dwh.fct_client where dele
 left join dwh.dim_common_sku common_sku using(id_common_sku)
 left join (select id_client, id_common_sku, sale_date, bonus from dwh.fct_promo_n_plus_x plus_x left join dwh.dim_sku using(id_sku) where plus_x.delete_date is null) promo_price 
 on promo_price.id_client=twp.id_client and promo_price.id_common_sku=twp.id_common_sku and promo_price.sale_date = twp.start_date
+
