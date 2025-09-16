@@ -1,3 +1,5 @@
+
+
 CREATE OR REPLACE VIEW public.promo_condition_sales_vw as(
 WITH promo_base_info AS (
   SELECT  
