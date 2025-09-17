@@ -41,7 +41,7 @@ promo_condition_sales AS (
   ) pnpxe ON
     fss.id_client = pnpxe.id_client AND
     fss.tin_buyer = pnpxe.tin_buyer AND
-    (
+    ( 
       fss.operation_date BETWEEN pnpxe.start_date AND pnpxe.end_date OR
       fss.operation_date BETWEEN pbi.start_date - (pbi.end_date - pbi.start_date) AND pbi.start_date-1
     ) AND

@@ -55,6 +55,7 @@ promo_condition_sales AS (
       fss.operation_date BETWEEN pbi.start_date AND pbi.end_date
     ) AND
     fss.id_operation_type = 4
+    fss.quantity > 0
 ),
 sales_with_packs AS (
 	SELECT 
