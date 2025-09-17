@@ -10,8 +10,8 @@ vw.quantity_promo AS "Продано упаковок по данным итог
 vw.sales_bonus AS "Бонус за пакет по нашим данным",
 vw.promo_bonus AS "Бонус за пакет по данным итогов",
 vw.promo_multiple - vw.sales_multiple AS "Разница кратности",
-COALESCE(vw.quantity_promo, 0) - vw.quantity_sales  AS "Разница упаковок",
-vw.promo_bonus - vw.sales_bonus  AS "Разница бонуса за упаковку",
+COALESCE(vw.quantity_promo, 0) - COALESCE(vw.quantity_sales, 0)  AS "Разница упаковок",
+COALESCE(vw.promo_bonus, 0) - vw.sales_bonus  AS "Разница бонуса за упаковку",
 vw.sales_sum_bonus AS "Сумма бонуса по нашим данным",
 (floor(vw.quantity_promo / vw.promo_multiple) * vw.promo_bonus) AS "Сумма бонуса по данным итогов",
 COALESCE((vw.quantity_promo / vw.promo_multiple * vw.promo_bonus),0) - (vw.quantity_sales / vw.sales_multiple * vw.sales_bonus) AS "Коррекция"
